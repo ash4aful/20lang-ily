@@ -6,20 +6,32 @@ HTML = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Love Heart</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
     background: #060208;
     overflow: hidden;
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
   }
   canvas {
     display: block;
-    margin: 0 auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     cursor: default;
+    touch-action: none;
   }
 </style>
 </head>
@@ -36,9 +48,9 @@ const PHRASES = [
 
 const SC = 21;
 const OY = 20;
-const DURATION = 10;
+const DURATION = 16;   // slower overall build (was 10)
 const TICK = 16;
-const ANIM = 42;
+const ANIM = 68;       // slower individual phrase entrance (was 42)
 const LIFT = 34;
 const GAP = 7;
 const SIZES = [9, 10, 11, 12];
@@ -51,14 +63,21 @@ const ctx = canvas.getContext("2d");
 let W = 800, H = 800;
 
 function resize() {
-  const s = Math.min(window.innerWidth, window.innerHeight, 900);
+  // Use full available viewport; keep square so heart stays proportional
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const s = Math.min(vw, vh);
+  // High-DPI support for crisp text on phones
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
   W = H = s;
-  canvas.width = W;
-  canvas.height = H;
-  canvas.style.width = W + "px";
-  canvas.style.height = H + "px";
+  canvas.width = Math.round(s * dpr);
+  canvas.height = Math.round(s * dpr);
+  canvas.style.width = s + "px";
+  canvas.style.height = s + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 window.addEventListener("resize", resize);
+window.addEventListener("orientationchange", () => setTimeout(resize, 100));
 resize();
 
 // seeded PRNG (same seed as original)
